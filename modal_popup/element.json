@@ -1,0 +1,313 @@
+{
+    "name": "modal_popup",
+    "title": "Modal Popup",
+    "icon": "${url:images/icon.svg}",
+    "iconSmall": "${url:images/iconSmall.svg}",
+    "element": true,
+    "width": 500,
+    "defaults": {
+        "modal_trigger_type": "button",
+        "modal_trigger_text": "Open Modal",
+        "modal_content_type": "custom",
+        "modal_custom_content": "<p>This is the default modal content. Edit it in the builder.</p>",
+        "modal_width": "600px",
+        "modal_height": "auto",
+        "modal_padding": "20px",
+        "modal_border_radius": "5px",
+        "modal_overlay_background_color": "rgba(0,0,0,0.5)",
+        "modal_background_color": "#ffffff",
+        "modal_close_button": "icon",
+        "modal_close_button_position": "top-right",
+        "modal_animation_entrance": "uk-fade",
+        "modal_animation_exit": "uk-fade",
+        "modal_disable_body_scroll": true,
+        "modal_z_index": 1010
+    },
+    "fields": {
+        "modal_trigger_type": {
+            "label": "Trigger Type",
+            "type": "select",
+            "options": {
+                "Button": "button",
+                "Image": "image",
+                "Link": "link",
+                "Auto on Page Load": "auto",
+                "Custom Selector": "custom_selector"
+            }
+        },
+        "modal_trigger_text": {
+            "label": "Button Text",
+            "type": "text",
+            "source": true,
+            "show": "modal_trigger_type == 'button'"
+        },
+        "modal_trigger_image": {
+            "label": "Trigger Image",
+            "type": "image",
+            "source": true,
+            "show": "modal_trigger_type == 'image'"
+        },
+        "modal_trigger_link_text": {
+            "label": "Link Text",
+            "type": "text",
+            "source": true,
+            "show": "modal_trigger_type == 'link'"
+        },
+        "modal_trigger_custom_selector": {
+            "label": "Custom CSS Selector",
+            "description": "e.g., #my-button or .my-class",
+            "type": "text",
+            "show": "modal_trigger_type == 'custom_selector'"
+        },
+        "modal_content_type": {
+            "label": "Content Source",
+            "type": "select",
+            "options": {
+                "Custom Content": "custom",
+                "WordPress Article": "article",
+                "WordPress Widget Area": "widget_area"
+            }
+        },
+        "modal_custom_content": {
+            "label": "Custom Content",
+            "type": "editor",
+            "source": true,
+            "show": "modal_content_type == 'custom'"
+        },
+        "modal_article_id": {
+            "label": "Article ID or Slug",
+            "description": "Enter the ID or slug of the WordPress post/page.",
+            "type": "text",
+            "source": true,
+            "show": "modal_content_type == 'article'"
+        },
+        "modal_widget_area_id": {
+            "label": "Widget Area Name/ID",
+            "description": "Enter the name or ID of the WordPress Widget Area.",
+            "type": "text",
+            "source": true,
+            "show": "modal_content_type == 'widget_area'"
+        },
+        "modal_width": {
+            "label": "Modal Width",
+            "description": "e.g., 500px, 80%, auto",
+            "type": "text"
+        },
+        "modal_height": {
+            "label": "Modal Height",
+            "description": "e.g., auto, 70vh, 400px",
+            "type": "text"
+        },
+        "modal_padding": {
+            "label": "Padding",
+            "description": "e.g., 20px or 10px 15px",
+            "type": "text"
+        },
+        "modal_border_radius": {
+            "label": "Border Radius",
+            "description": "e.g., 5px",
+            "type": "text"
+        },
+        "modal_overlay_background_color": {
+            "label": "Overlay Background Color",
+            "type": "color"
+        },
+        "modal_background_color": {
+            "label": "Modal Background Color",
+            "type": "color"
+        },
+        "modal_close_button": {
+            "label": "Close Button Type",
+            "type": "select",
+            "options": {
+                "Icon": "icon",
+                "Text": "text",
+                "None": "none"
+            }
+        },
+        "modal_close_button_text": {
+            "label": "Close Button Text",
+            "type": "text",
+            "show": "modal_close_button == 'text'"
+        },
+        "modal_close_button_position": {
+            "label": "Close Button Position",
+            "type": "select",
+            "options": {
+                "Top Right": "top-right",
+                "Top Left": "top-left"
+            },
+            "show": "modal_close_button != 'none'"
+        },
+        "modal_animation_entrance": {
+            "label": "Entrance Animation",
+            "type": "select",
+            "options": {
+                "None": "",
+                "Fade In": "uk-fade",
+                "Scale Up": "uk-scale-up",
+                "Scale Down": "uk-scale-down",
+                "Slide Top Small": "uk-slide-top-small",
+                "Slide Bottom Small": "uk-slide-bottom-small",
+                "Slide Left Small": "uk-slide-left-small",
+                "Slide Right Small": "uk-slide-right-small",
+                "Slide Top Medium": "uk-slide-top-medium",
+                "Slide Bottom Medium": "uk-slide-bottom-medium",
+                "Slide Left Medium": "uk-slide-left-medium",
+                "Slide Right Medium": "uk-slide-right-medium"
+            }
+        },
+        "modal_animation_exit": {
+            "label": "Exit Animation",
+            "type": "select",
+            "options": {
+                "None": "",
+                "Fade Out": "uk-fade",
+                "Scale Up": "uk-scale-up",
+                "Scale Down": "uk-scale-down",
+                "Slide Top Small": "uk-slide-top-small",
+                "Slide Bottom Small": "uk-slide-bottom-small",
+                "Slide Left Small": "uk-slide-left-small",
+                "Slide Right Small": "uk-slide-right-small",
+                "Slide Top Medium": "uk-slide-top-medium",
+                "Slide Bottom Medium": "uk-slide-bottom-medium",
+                "Slide Left Medium": "uk-slide-left-medium",
+                "Slide Right Medium": "uk-slide-right-medium"
+            }
+        },
+        "modal_auto_open_delay": {
+            "label": "Auto Open Delay (ms)",
+            "description": "Delay in milliseconds before opening automatically. Only if Trigger Type is 'Auto on Page Load'. Leave empty or 0 to disable.",
+            "type": "number",
+            "attrs": { "min": 0, "step": 100 },
+            "show": "modal_trigger_type == 'auto'"
+        },
+        "modal_auto_close_delay": {
+            "label": "Auto Close Delay (ms)",
+            "description": "Delay in milliseconds before closing automatically. Leave empty or 0 to disable.",
+            "type": "number",
+            "attrs": { "min": 0, "step": 100 }
+        },
+        "modal_z_index": {
+            "label": "Z-index",
+            "type": "number",
+            "attrs": { "step": 10 }
+        },
+        "modal_disable_body_scroll": {
+            "label": "Disable Page Scroll",
+            "type": "checkbox",
+            "text": "Prevent scrolling on the page when the modal is open."
+        },
+        "name": "${builder.name}",
+        "status": "${builder.status}",
+        "source": "${builder.source}",
+        "id": "${builder.id}",
+        "class": "${builder.cls}",
+        "attributes": "${builder.attrs}",
+        "css": {
+            "type": "editor",
+            "label": "CSS",
+            "description": "Enter your own custom CSS.",
+            "editor": "code",
+            "mode": "css",
+            "attrs": {
+                "debounce": 500
+            }
+        }
+    },
+    "fieldset": {
+        "default": {
+            "type": "tabs",
+            "fields": [
+                {
+                    "title": "Content",
+                    "fields": [
+                        "modal_trigger_type",
+                        "modal_trigger_text",
+                        "modal_trigger_image",
+                        "modal_trigger_link_text",
+                        "modal_trigger_custom_selector",
+                        {
+                            "type": "divider"
+                        },
+                        "modal_content_type",
+                        "modal_custom_content",
+                        "modal_article_id",
+                        "modal_widget_area_id"
+                    ]
+                },
+                {
+                    "title": "Settings",
+                    "fields": [
+                        {
+                            "label": "Layout",
+                            "type": "group",
+                            "divider": true,
+                            "fields": [
+                                "modal_width",
+                                "modal_height",
+                                "modal_padding",
+                                "modal_border_radius"
+                            ]
+                        },
+                        {
+                            "label": "Appearance",
+                            "type": "group",
+                            "divider": true,
+                            "fields": [
+                                "modal_overlay_background_color",
+                                "modal_background_color"
+                            ]
+                        },
+                        {
+                            "label": "Close Button",
+                            "type": "group",
+                            "divider": true,
+                            "fields": [
+                                "modal_close_button",
+                                "modal_close_button_text",
+                                "modal_close_button_position"
+                            ]
+                        },
+                        {
+                            "label": "Animation",
+                            "type": "group",
+                            "divider": true,
+                            "fields": [
+                                "modal_animation_entrance",
+                                "modal_animation_exit"
+                            ]
+                        },
+                        {
+                            "label": "Behavior",
+                            "type": "group",
+                            "fields": [
+                                "modal_auto_open_delay",
+                                "modal_auto_close_delay",
+                                "modal_disable_body_scroll"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "title": "Advanced",
+                    "fields": [
+                        "modal_z_index",
+                        "name",
+                        "status",
+                        "source",
+                        "id",
+                        "class",
+                        "attributes",
+                        "css"
+                    ]
+                }
+            ]
+        }
+    },
+    "templates": {
+        "render": "./templates/template.php",
+        "content": "./templates/content.php"
+    },
+    "@import": "./element.php"
+}
