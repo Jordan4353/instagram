@@ -1,0 +1,285 @@
+{
+    "@import": "./element.php",
+    "name": "instagram-feed",
+    "title": "Instagram Feed",
+    "group": "Custom",
+    "icon": "${url:images/icon.svg}",
+    "iconSmall": "${url:images/iconSmall.svg}",
+    "description": "Displays a feed of Instagram posts from a user account or hashtag. Requires a valid Instagram API Access Token. Due to API limitations and policies, functionality (especially for hashtags) and data availability can change. Manage your Access Token and API usage responsibly.",
+    "element": true,
+    "container": true,
+    "width": 500,
+    "templates": {
+        "render": "./templates/template.php",
+        "content": "./templates/content.php"
+    },
+    "fields": {
+        "name": "${builder.name}",
+        "status": "${builder.status}",
+        "source": "${builder.source}",
+        "id": "${builder.id}",
+        "class": "${builder.cls}",
+        "attributes": "${builder.attrs}",
+        "css": {
+            "label": "CSS",
+            "description": "Enter your own custom CSS. You can use <code>.el-element</code> to target this element, and <code>.el-item</code> to target all items within this element.",
+            "type": "editor",
+            "editor": "code",
+            "mode": "css",
+            "attrs": {
+                "debounce": 500,
+                "hints": [
+                    ".el-element",
+                    ".el-item"
+                ]
+            }
+        },
+        "instagram_source_type": {
+            "label": "Instagram Source",
+            "description": "Select the type of Instagram feed to display.",
+            "type": "select",
+            "default": "user",
+            "options": {
+                "User Account": "user",
+                "Hashtag (Recent Media)": "hashtag"
+            }
+        },
+        "instagram_user_id": {
+            "label": "Instagram User ID",
+            "description": "Enter the numeric User ID of the Instagram account (required if 'Source: User Account' is selected). For the Instagram Graph API, this is your Instagram Business Account ID or Professional Account ID. For Basic Display API, it's your User ID. Many online tools can help find this.",
+            "type": "text",
+            "show": "instagram_source_type == 'user'"
+        },
+        "instagram_hashtag": {
+            "label": "Instagram Hashtag",
+            "description": "Enter the hashtag to fetch (without the #, e.g., 'naturephotography'). Required if 'Source: Hashtag' is selected. Note: The Instagram API (Graph API) typically provides media published in the last 24 hours for hashtags and requires specific permissions. Access to hashtag data can be limited.",
+            "type": "text",
+            "show": "instagram_source_type == 'hashtag'"
+        },
+        "instagram_access_token": {
+            "label": "Instagram Access Token",
+            "description": "Enter your Instagram API Access Token. This is required to fetch data. To obtain an Access Token, you'll need to register an app on the Facebook/Meta Developer portal and use the Instagram Basic Display API or Instagram Graph API. Ensure your token has `user_profile` and `user_media` (for Graph API) or `instagram_graph_user_profile` and `instagram_graph_user_media` (for Basic Display API) permissions. Store this token securely.",
+            "type": "textarea",
+            "attrs": {
+                "rows": 3,
+                "placeholder": "Paste your Access Token here"
+            }
+        },
+        "instagram_limit": {
+            "label": "Number of Posts",
+            "description": "Maximum number of posts to fetch and display. The actual number may be less depending on API response and permissions. Instagram API has rate limits, so requesting large numbers frequently might lead to temporary blocking.",
+            "type": "number",
+            "default": 9,
+            "attrs": {
+                "min": 1,
+                "max": 100
+            }
+        },
+        "instagram_items": {
+            "label": "Instagram Posts",
+            "description": "Manage the individual Instagram post items. Posts will be populated here after fetching via API based on above settings.",
+            "type": "content-items",
+            "item": "instagram-post-item",
+            "media": [
+                {"type": "image", "item": {"title": "caption", "image": "media_url"}},
+                {"type": "video", "item": {"title": "caption", "video": "media_url"}}
+            ]
+        },
+        "layout_type": {
+            "label": "Layout",
+            "description": "Select the layout for the Instagram feed.",
+            "type": "select",
+            "default": "grid",
+            "options": {
+                "Grid": "grid",
+                "Carousel": "carousel",
+                "Masonry": "masonry"
+            }
+        },
+        "columns": {
+            "label": "Columns",
+            "description": "Select the number of columns for the grid/masonry layout.",
+            "type": "select",
+            "default": "3",
+            "options": {
+                "1 Column": "1",
+                "2 Columns": "2",
+                "3 Columns": "3",
+                "4 Columns": "4",
+                "5 Columns": "5",
+                "6 Columns": "6"
+            },
+            "show": "layout_type == 'grid' || layout_type == 'masonry'"
+        },
+        "columns_gap": {
+            "label": "Column Gap",
+            "description": "Select the gap between columns.",
+            "type": "select",
+            "default": "medium",
+            "options": {
+                "Small": "small",
+                "Medium": "medium",
+                "Large": "large",
+                "None": ""
+            },
+            "show": "layout_type == 'grid' || layout_type == 'masonry'"
+        },
+        "show_captions": {
+            "label": "Show Captions",
+            "type": "checkbox",
+            "text": "Display post captions.",
+            "default": true
+        },
+        "caption_max_length": {
+            "label": "Caption Max Length",
+            "description": "Maximum number of characters for captions. Leave empty for no limit.",
+            "type": "number",
+            "attrs": {
+                "min": 0
+            },
+            "show": "show_captions"
+        },
+        "show_likes_comments": {
+            "label": "Show Likes & Comments",
+            "type": "checkbox",
+            "text": "Display like and comment counts (if available from API).",
+            "default": true
+        },
+        "show_button_link": {
+            "label": "Show 'View on Instagram' Button",
+            "type": "checkbox",
+            "text": "Display a button linking to the original post.",
+            "default": true
+        },
+        "button_style": {
+            "label": "Button Style",
+            "type": "select",
+            "default": "default",
+            "options": {
+                "Default": "default",
+                "Primary": "primary",
+                "Secondary": "secondary",
+                "Link": "link"
+            },
+            "show": "show_button_link"
+        },
+        "button_text": {
+            "label": "Button Text",
+            "default": "View on Instagram",
+            "show": "show_button_link"
+        },
+        "carousel_autoplay": {
+            "label": "Autoplay",
+            "type": "checkbox",
+            "text": "Enable autoplay for carousel.",
+            "default": false,
+            "show": "layout_type == 'carousel'"
+        },
+        "carousel_interval": {
+            "label": "Autoplay Interval (ms)",
+            "type": "number",
+            "default": 3000,
+            "attrs": {
+                "min": 1000
+            },
+            "show": "layout_type == 'carousel' && carousel_autoplay"
+        },
+        "carousel_show_navigation": {
+            "label": "Show Navigation",
+            "type": "checkbox",
+            "text": "Display next/previous navigation for carousel.",
+            "default": true,
+            "show": "layout_type == 'carousel'"
+        },
+        "image_resolution": {
+            "label": "Image Quality",
+            "description": "Select preferred image resolution. Actual resolution depends on API availability.",
+            "type": "select",
+            "default": "standard_resolution",
+            "options": {
+                "Standard": "standard_resolution",
+                "Low": "low_resolution",
+                "Thumbnail": "thumbnail"
+            }
+        },
+        "video_controls": {
+            "label": "Show Video Controls",
+            "type": "checkbox",
+            "text": "Display native video player controls.",
+            "default": true
+        },
+        "open_in_lightbox": {
+            "label": "Open in Lightbox",
+            "type": "checkbox",
+            "text": "Open images/videos in a lightbox when clicked.",
+            "default": true
+        }
+    },
+    "fieldset": {
+        "default": {
+            "type": "tabs",
+            "fields": [
+                {
+                    "title": "Content",
+                    "fields": [
+                        "instagram_source_type",
+                        "instagram_user_id",
+                        "instagram_hashtag",
+                        "instagram_access_token",
+                        "instagram_limit",
+                        "instagram_items"
+                    ]
+                },
+                {
+                    "title": "Settings",
+                    "fields": [
+                        {
+                            "label": "Layout",
+                            "type": "group",
+                            "fields": [
+                                "layout_type",
+                                "columns",
+                                "columns_gap"
+                            ]
+                        },
+                        {
+                            "label": "Display Options",
+                            "type": "group",
+                            "fields": [
+                                "show_captions",
+                                "caption_max_length",
+                                "show_likes_comments",
+                                "show_button_link",
+                                "button_style",
+                                "button_text"
+                            ]
+                        },
+                        {
+                            "label": "Carousel Settings",
+                            "type": "group",
+                            "fields": [
+                                "carousel_autoplay",
+                                "carousel_interval",
+                                "carousel_show_navigation"
+                            ],
+                            "show": "layout_type == 'carousel'"
+                        },
+                        {
+                            "label": "Media Settings",
+                            "type": "group",
+                            "fields": [
+                                "image_resolution",
+                                "video_controls",
+                                "open_in_lightbox"
+                            ]
+                        }
+                    ]
+                },
+                "${builder.advanced}"
+            ]
+        }
+    },
+    "defaults": {
+        "name": "Instagram Feed"
+    }
+}

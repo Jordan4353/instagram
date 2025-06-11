@@ -1,0 +1,99 @@
+{
+    "name": "instagram-post-item",
+    "title": "Instagram Post Item",
+    "icon": "${url:images/icon.svg}",
+    "iconSmall": "${url:images/iconSmall.svg}",
+    "width": 500,
+    "templates": {
+        "render": "./templates/template.php",
+        "content": "./templates/content.php"
+    },
+    "fields": {
+        "post_id": {
+            "label": "Post ID",
+            "type": "text",
+            "source": true,
+            "attrs": {
+                "readonly": true
+            }
+        },
+        "media_type": {
+            "label": "Media Type",
+            "type": "select",
+            "options": {
+                "Image": "IMAGE",
+                "Video": "VIDEO",
+                "Carousel": "CAROUSEL_ALBUM"
+            },
+            "source": true
+        },
+        "media_url": {
+            "label": "Media URL",
+            "type": "text",
+            "source": true
+        },
+        "thumbnail_url": {
+            "label": "Thumbnail URL (for Video)",
+            "type": "text",
+            "source": true
+        },
+        "caption": {
+            "label": "Caption",
+            "type": "textarea",
+            "source": true
+        },
+        "permalink": {
+            "label": "Permalink",
+            "type": "text",
+            "source": true
+        },
+        "timestamp": {
+            "label": "Timestamp",
+            "type": "text",
+            "source": true
+        },
+        "username": {
+            "label": "Username",
+            "type": "text",
+            "source": true
+        },
+        "likes_count": {
+            "label": "Likes Count",
+            "type": "number",
+            "source": true
+        },
+        "comments_count": {
+            "label": "Comments Count",
+            "type": "number",
+            "source": true
+        },
+        "status": "${builder.statusItem}",
+        "source": "${builder.source}"
+    },
+    "fieldset": {
+        "default": {
+            "type": "tabs",
+            "fields": [
+                {
+                    "title": "Content",
+                    "fields": [
+                        "post_id",
+                        "media_type",
+                        "media_url",
+                        "thumbnail_url",
+                        "caption",
+                        "permalink",
+                        "timestamp",
+                        "username",
+                        "likes_count",
+                        "comments_count"
+                    ]
+                },
+                "${builder.advancedItem}"
+            ]
+        }
+    },
+    "defaults": {
+        "media_type": "IMAGE"
+    }
+}
