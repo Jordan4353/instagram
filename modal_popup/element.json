@@ -50,6 +50,7 @@
             "label": "Trigger Image",
             "type": "image",
             "source": true,
+            "attrs": {},
             "show": "modal_trigger_type == 'image'"
         },
         "modal_trigger_link_text": {
