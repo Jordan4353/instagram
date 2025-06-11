@@ -1,6 +1,7 @@
 {
     "name": "modal_popup",
     "title": "Modal Popup",
+    "group": "Pro Loyal Web Design",
     "icon": "${url:images/icon.svg}",
     "iconSmall": "${url:images/iconSmall.svg}",
     "element": true,
