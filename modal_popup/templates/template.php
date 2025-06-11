@@ -34,6 +34,12 @@ $auto_close_delay = $props['modal_auto_close_delay'];
 $z_index = $props['modal_z_index'];
 $disable_body_scroll = $props['modal_disable_body_scroll'];
 
+// Scroll Trigger Props
+$scroll_trigger_type = $props['modal_trigger_scroll_type'] ?? 'amount';
+$scroll_amount = $props['modal_trigger_scroll_amount'] ?? 50;
+$scroll_unit = $props['modal_trigger_scroll_amount_unit'] ?? '%';
+$scroll_element_selector = $props['modal_trigger_scroll_element_selector'] ?? '';
+
 // --- Prepare Classes and Styles ---
 
 // Modal classes
@@ -227,3 +233,114 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <?php endif; ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modalElement = document.getElementById('<?= esc_js($modal_id) ?>');
+    if (!modalElement || typeof UIkit === 'undefined') return;
+
+    let triggeredOnce = false; // Flag to ensure triggers only fire once
+
+    const showModal = () => {
+        if (!triggeredOnce) {
+            UIkit.modal(modalElement).show();
+            triggeredOnce = true;
+            // Optionally, remove listeners if they are persistent and only meant for one-shot
+        }
+    };
+
+    // --- Scroll Trigger ---
+    <?php if ($trigger_type === 'scroll'): ?>
+        const scrollTriggerType = '<?= esc_js($scroll_trigger_type) ?>';
+
+        if (scrollTriggerType === 'amount') {
+            const scrollAmount = parseInt('<?= esc_js($scroll_amount) ?>', 10);
+            const scrollUnit = '<?= esc_js($scroll_unit) ?>';
+            let scrollListenerAttached = false;
+
+            const handleScrollAmount = () => {
+                if (triggeredOnce) {
+                    window.removeEventListener('scroll', handleScrollAmount);
+                    return;
+                }
+                let scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+                let currentScroll = window.scrollY;
+
+                if (scrollUnit === '%') {
+                    if (scrollPercent >= scrollAmount) {
+                        showModal();
+                        window.removeEventListener('scroll', handleScrollAmount);
+                    }
+                } else { // px
+                    if (currentScroll >= scrollAmount) {
+                        showModal();
+                        window.removeEventListener('scroll', handleScrollAmount);
+                    }
+                }
+            };
+
+            // Attach listener only if not triggered and amount is valid
+            if (!isNaN(scrollAmount) && scrollAmount >= 0) {
+                 // Initial check in case the condition is already met on load
+                handleScrollAmount();
+                if (!triggeredOnce) {
+                    window.addEventListener('scroll', handleScrollAmount, { passive: true });
+                    scrollListenerAttached = true;
+                }
+            }
+        } else if (scrollTriggerType === 'element') {
+            const targetSelector = '<?= esc_js($scroll_element_selector) ?>';
+            const targetElement = targetSelector ? document.querySelector(targetSelector) : null;
+
+            if (targetElement) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            if (!triggeredOnce) { // Check flag before showing
+                                showModal();
+                                observer.unobserve(entry.target); // Stop observing once triggered
+                            }
+                        }
+                    });
+                }, { threshold: 0.1 }); // Trigger when 10% of the element is visible
+
+                observer.observe(targetElement);
+            }
+        }
+    <?php endif; ?>
+
+    // --- Exit Intent Trigger ---
+    <?php if ($trigger_type === 'exit_intent'): ?>
+        let exitIntentListenerAttached = false;
+        const handleExitIntent = (e) => {
+            if (triggeredOnce) { // If already shown by another trigger or this one, remove listener
+                document.documentElement.removeEventListener('mouseout', handleExitIntent);
+                return;
+            }
+            // If mouse is near the top of the viewport and moving upwards
+            if (e.clientY < 10 && e.relatedTarget == null && e.target.nodeName.toLowerCase() !== 'select') {
+                showModal();
+                document.documentElement.removeEventListener('mouseout', handleExitIntent); // Remove listener after triggering
+            }
+        };
+        document.documentElement.addEventListener('mouseout', handleExitIntent);
+        exitIntentListenerAttached = true;
+
+        // As a fallback, or additional measure, some people also check for mouse leaving the window entirely
+        // document.addEventListener('mouseleave', function(e) {
+        //     if (!triggeredOnce) { showModal(); }
+        // });
+
+    <?php endif; ?>
+
+    // Cleanup listeners if modal is closed manually before trigger (optional, advanced)
+    // UIkit.util.on(modalElement, 'beforehide', function() {
+    //     if (!triggeredOnce) { // If modal is closed before it was programmatically triggered
+    //        // Remove scroll/exit listeners if they were attached and we want to prevent future auto-triggering
+    //        if (scrollListenerAttached) window.removeEventListener('scroll', handleScrollAmount);
+    //        if (exitIntentListenerAttached) document.documentElement.removeEventListener('mouseout', handleExitIntent);
+    //     }
+    // });
+
+});
+</script>

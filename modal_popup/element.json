@@ -21,7 +21,10 @@
         "modal_animation_entrance": "uk-fade",
         "modal_animation_exit": "uk-fade",
         "modal_disable_body_scroll": true,
-        "modal_z_index": 1010
+        "modal_z_index": 1010,
+        "modal_trigger_scroll_type": "amount",
+        "modal_trigger_scroll_amount": 50,
+        "modal_trigger_scroll_amount_unit": "%"
     },
     "fields": {
         "modal_trigger_type": {
@@ -32,6 +35,8 @@
                 "Image": "image",
                 "Link": "link",
                 "Auto on Page Load": "auto",
+                "On Scroll": "scroll",
+                "On Exit Intent": "exit_intent",
                 "Custom Selector": "custom_selector"
             }
         },
@@ -58,6 +63,39 @@
             "description": "e.g., #my-button or .my-class",
             "type": "text",
             "show": "modal_trigger_type == 'custom_selector'"
+        },
+        "modal_trigger_scroll_type": {
+            "label": "Scroll Trigger Method",
+            "type": "select",
+            "default": "amount",
+            "options": {
+                "Scroll Amount": "amount",
+                "Element Enters Viewport": "element"
+            },
+            "show": "modal_trigger_type == 'scroll'"
+        },
+        "modal_trigger_scroll_amount": {
+            "label": "Scroll Amount",
+            "type": "number",
+            "default": 50,
+            "attrs": { "min": 0 },
+            "show": "modal_trigger_type == 'scroll' && modal_trigger_scroll_type == 'amount'"
+        },
+        "modal_trigger_scroll_amount_unit": {
+            "label": "Scroll Amount Unit",
+            "type": "select",
+            "default": "%",
+            "options": {
+                "Percent (%)": "%",
+                "Pixels (px)": "px"
+            },
+            "show": "modal_trigger_type == 'scroll' && modal_trigger_scroll_type == 'amount'"
+        },
+        "modal_trigger_scroll_element_selector": {
+            "label": "Element Selector for Scroll",
+            "description": "e.g., #my-section or .trigger-here. Modal opens when this element enters viewport.",
+            "type": "text",
+            "show": "modal_trigger_type == 'scroll' && modal_trigger_scroll_type == 'element'"
         },
         "modal_content_type": {
             "label": "Content Source",
@@ -227,6 +265,17 @@
                         "modal_trigger_image",
                         "modal_trigger_link_text",
                         "modal_trigger_custom_selector",
+                        {
+                            "type": "group",
+                            "label": "Scroll Trigger Settings",
+                            "show": "modal_trigger_type == 'scroll'",
+                            "fields": [
+                                "modal_trigger_scroll_type",
+                                "modal_trigger_scroll_amount",
+                                "modal_trigger_scroll_amount_unit",
+                                "modal_trigger_scroll_element_selector"
+                            ]
+                        },
                         {
                             "type": "divider"
                         },

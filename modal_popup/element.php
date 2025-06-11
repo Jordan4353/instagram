@@ -16,47 +16,82 @@ return [
             // - Prepare data for the template (e.g., fetch dynamic content).
 
             // Collapsing layout: Check trigger and content
-            if (empty($node->props['modal_trigger_type'])) {
-                return false; // No trigger defined
+            $triggerType = $node->props['modal_trigger_type'] ?? null;
+
+            if (empty($triggerType)) {
+                return false; // No trigger type defined
             }
 
-            // If trigger is auto-open, content must exist
-            if ($node->props['modal_trigger_type'] === 'auto') {
+            // Content checks for triggers that open automatically (auto, scroll, exit_intent)
+            if (in_array($triggerType, ['auto', 'scroll', 'exit_intent'])) {
                 if (empty($node->props['modal_content_type'])) {
                     return false;
                 }
-                if ($node->props['modal_content_type'] === 'custom' && empty($node->props['modal_custom_content'])) {
-                    return false;
+                $contentType = $node->props['modal_content_type'];
+                if ($contentType === 'custom' && empty($node->props['modal_custom_content'])) {
+                    // Allow if content is dynamic and mapped
+                    if (empty($params['builder']->getProps('source')['modal_custom_content'])) {
+                        return false;
+                    }
                 }
-                if ($node->props['modal_content_type'] === 'article' && empty($node->props['modal_article_id'])) {
-                    return false;
+                if ($contentType === 'article' && empty($node->props['modal_article_id'])) {
+                    if (empty($params['builder']->getProps('source')['modal_article_id'])) {
+                        return false;
+                    }
                 }
-                if ($node->props['modal_content_type'] === 'widget_area' && empty($node->props['modal_widget_area_id'])) {
-                    return false;
+                if ($contentType === 'widget_area' && empty($node->props['modal_widget_area_id'])) {
+                    if (empty($params['builder']->getProps('source')['modal_widget_area_id'])) {
+                        return false;
+                    }
                 }
             }
-            // If trigger is button, text must exist
-            if ($node->props['modal_trigger_type'] === 'button' && empty($node->props['modal_trigger_text'])){
-                // Allow if content is dynamic and mapped
-                 if (empty($params['builder']->getProps('source')['modal_trigger_text'])) {
-                    return false;
-                 }
-            }
-            // If trigger is image, image must exist
-            if ($node->props['modal_trigger_type'] === 'image' && empty($node->props['modal_trigger_image'])){
-                 if (empty($params['builder']->getProps('source')['modal_trigger_image'])) {
-                    return false;
-                 }
-            }
-            // If trigger is link, link text must exist
-            if ($node->props['modal_trigger_type'] === 'link' && empty($node->props['modal_trigger_link_text'])){
-                 if (empty($params['builder']->getProps('source')['modal_trigger_link_text'])) {
-                    return false;
-                 }
-            }
-            // If trigger is custom selector, selector must exist
-            if ($node->props['modal_trigger_type'] === 'custom_selector' && empty($node->props['modal_trigger_custom_selector'])){
-                return false;
+
+            // Specific checks for trigger configurations
+            switch ($triggerType) {
+                case 'button':
+                    if (empty($node->props['modal_trigger_text']) && empty($params['builder']->getProps('source')['modal_trigger_text'])) {
+                        return false;
+                    }
+                    break;
+                case 'image':
+                    if (empty($node->props['modal_trigger_image']) && empty($params['builder']->getProps('source')['modal_trigger_image'])) {
+                        return false;
+                    }
+                    break;
+                case 'link':
+                    if (empty($node->props['modal_trigger_link_text']) && empty($params['builder']->getProps('source')['modal_trigger_link_text'])) {
+                        return false;
+                    }
+                    break;
+                case 'custom_selector':
+                    if (empty($node->props['modal_trigger_custom_selector'])) {
+                        return false;
+                    }
+                    break;
+                case 'scroll':
+                    $scrollType = $node->props['modal_trigger_scroll_type'] ?? null;
+                    if ($scrollType === 'amount') {
+                        if (!isset($node->props['modal_trigger_scroll_amount']) || $node->props['modal_trigger_scroll_amount'] === '') {
+                             // Amount can be 0, so check if it's set at all for non-dynamic cases
+                             // If dynamic source is possible for scroll_amount, that check would be here too.
+                             // For now, assuming scroll_amount is not dynamically sourced itself.
+                            return false;
+                        }
+                    } elseif ($scrollType === 'element') {
+                        if (empty($node->props['modal_trigger_scroll_element_selector'])) {
+                            return false;
+                        }
+                    } else {
+                        return false; // Invalid scroll type
+                    }
+                    break;
+                case 'auto': // Auto on page load
+                    // The content check at the beginning handles 'auto' already.
+                    // modal_auto_open_delay can be 0, so no specific check on its value for collapsing here.
+                    break;
+                case 'exit_intent':
+                    // The content check at the beginning handles 'exit_intent' already.
+                    break;
             }
 
             // Fetch dynamic content if applicable
