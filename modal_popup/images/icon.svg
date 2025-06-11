@@ -1,9 +1,5 @@
-<svg width="80" height="80" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-    <rect x="2.5" y="2.5" width="15" height="15" rx="1" ry="1" fill="none" stroke="currentColor" stroke-width="1"/>
-    <rect x="4.5" y="4.5" width="11" height="7" fill="currentColor" fill-opacity="0.1"/>
-    <line x1="5" y1="14.5" x2="15" y2="14.5" stroke="currentColor" stroke-width="0.75" stroke-linecap="round"/>
-    <line x1="5.5" y1="6" x2="14.5" y2="6" stroke="currentColor" stroke-width="0.5" stroke-linecap="round"/>
-    <line x1="5.5" y1="8" x2="14.5" y2="8" stroke="currentColor" stroke-width="0.5" stroke-linecap="round"/>
-    <circle cx="15.5" cy="4.5" r="1.5" fill="currentColor" fill-opacity="0.2"/>
-    <path d="M15.5,4.5 L15.5,4.5" stroke="currentColor" stroke-width="0.5" stroke-linecap="round"/>
+<svg width="60" height="60" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+    <path d="M4 2C2.89543 2 2 2.89543 2 4V20C2 21.1046 2.89543 22 4 22H20C21.1046 22 22 21.1046 22 20V4C22 2.89543 21.1046 2 20 2H4ZM4 4H20V20H4V4Z" />
+    <path opacity="0.3" d="M6 6H18V15H6V6Z" />
+    <path d="M8 17H16V18H8V17Z" />
 </svg>
