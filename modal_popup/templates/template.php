@@ -78,15 +78,6 @@ if ($trigger_type === 'button') :
     <button class="uk-button uk-button-default" <?= $this->attrs($trigger_attrs) ?> type="button">
         <?= htmlspecialchars($trigger_text) ?>
     </button>
-<?php elseif ($trigger_type === 'image' && $trigger_image_src) :
-    $img_attrs = ['src' => $trigger_image_src, 'alt' => $trigger_text ?: 'Open Modal', 'uk-img' => true];
-?>
-    <img <?= $this->attrs($trigger_attrs, $img_attrs) ?> style="cursor: pointer;" />
-<?php elseif ($trigger_type === 'link') :
-?>
-    <a <?= $this->attrs($trigger_attrs) ?> href="#" onclick="return false;">
-        <?= htmlspecialchars($trigger_link_text) ?>
-    </a>
 <?php elseif ($trigger_type === 'custom_selector' && $trigger_custom_selector) :
     // Trigger is handled by custom JS targeting the selector and this modal ID
     // We might add a script here to initialize it, or assume global JS handles it.

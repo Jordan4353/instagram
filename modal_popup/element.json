@@ -33,8 +33,6 @@
             "type": "select",
             "options": {
                 "Button": "button",
-                "Image": "image",
-                "Link": "link",
                 "Auto on Page Load": "auto",
                 "On Scroll": "scroll",
                 "On Exit Intent": "exit_intent",
@@ -46,19 +44,6 @@
             "type": "text",
             "source": true,
             "show": "modal_trigger_type == 'button'"
-        },
-        "modal_trigger_image": {
-            "label": "Trigger Image",
-            "type": "image",
-            "source": true,
-            "attrs": {},
-            "show": "modal_trigger_type == 'image'"
-        },
-        "modal_trigger_link_text": {
-            "label": "Link Text",
-            "type": "text",
-            "source": true,
-            "show": "modal_trigger_type == 'link'"
         },
         "modal_trigger_custom_selector": {
             "label": "Custom CSS Selector",
@@ -264,8 +249,6 @@
                     "fields": [
                         "modal_trigger_type",
                         "modal_trigger_text",
-                        "modal_trigger_image",
-                        "modal_trigger_link_text",
                         "modal_trigger_custom_selector",
                         {
                             "type": "group",

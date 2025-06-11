@@ -46,16 +46,6 @@ return [
                         return false;
                     }
                     break;
-                case 'image':
-                    if (empty($node->props['modal_trigger_image'])) {
-                        return false;
-                    }
-                    break;
-                case 'link':
-                    if (empty($node->props['modal_trigger_link_text'])) {
-                        return false;
-                    }
-                    break;
                 case 'custom_selector':
                     if (empty($node->props['modal_trigger_custom_selector'])) {
                         return false;

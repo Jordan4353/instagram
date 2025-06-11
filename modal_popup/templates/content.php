@@ -33,12 +33,6 @@ if (!empty($props['modal_trigger_type'])) {
     $triggerType = $props['modal_trigger_type'];
     if ($triggerType === 'button' && !empty($props['modal_trigger_text'])) {
         $trigger_info = esc_html__('Trigger:', 'modal_popup_element') . ' ' . htmlspecialchars($props['modal_trigger_text']);
-    } elseif ($triggerType === 'link' && !empty($props['modal_trigger_link_text'])) {
-        $trigger_info = esc_html__('Trigger:', 'modal_popup_element') . ' ' . htmlspecialchars($props['modal_trigger_link_text']);
-    } elseif ($triggerType === 'image' && !empty($props['modal_trigger_image'])) {
-        // For image trigger, alt text or a generic note could be used if $props['modal_trigger_text'] was also populated for alt for image trigger
-        $alt_text = $props['modal_trigger_text'] ?? ''; // Assuming modal_trigger_text might be used for alt for image trigger
-        $trigger_info = esc_html__('Trigger: Image', 'modal_popup_element') . ($alt_text ? ' (' . htmlspecialchars($alt_text) . ')' : '');
     } elseif ($triggerType === 'custom_selector' && !empty($props['modal_trigger_custom_selector'])){
         $trigger_info = esc_html__('Trigger: Custom Selector', 'modal_popup_element') . ' (' . htmlspecialchars($props['modal_trigger_custom_selector']) . ')';
     } elseif ($triggerType === 'auto'){
