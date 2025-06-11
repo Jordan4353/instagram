@@ -9,160 +9,183 @@ if (!class_exists('JLoader')) {
     }
 }
 if (class_exists('JLoader')) {
-    JLoader::import('joomla.http.factory'); // For Joomla HTTP client, if needed later
+    JLoader::import('joomla.http.factory'); // For Joomla HTTP client
+    // JLoader::import('joomla.cache.factory'); // For Joomla Cache
+}
+
+// Helper function for simulated API call per account
+function simulate_instagram_api_call($account_config_props, $parent_node_props) {
+    $source_type = $account_config_props['account_source_type'] ?? 'user';
+    $user_id = $account_config_props['account_user_id'] ?? null;
+    $hashtag = $account_config_props['account_hashtag'] ?? null;
+    // $access_token = $account_config_props['account_access_token'] ?? null; // Used in real API
+
+    // This simulation can return slightly different data per source type for variety
+    // It also includes a unique identifier suffix based on user_id or hashtag for testing merging
+    $unique_suffix = $source_type === 'user' ? ($user_id ?? 'nouser') : ($hashtag ?? 'nohashtag');
+
+    if ($source_type === 'user' && $user_id) {
+        $parent_node_props['_api_debug_messages'][] = "Simulating API for User ID: {$user_id}.";
+        return [
+            ['id' => 'user_111_' . $unique_suffix, 'media_type' => 'IMAGE', 'media_url' => 'https://source.unsplash.com/random/800x600?nature,'.$user_id, 'thumbnail_url' => 'https://source.unsplash.com/random/400x300?nature,'.$user_id, 'caption' => "User {$user_id} post 1 #nature", 'permalink' => '#userpost1_'.$user_id, 'timestamp' => date('Y-m-d\TH:i:sP', time() - rand(0, 86400*5)), 'username' => 'user_'.$user_id, 'likes_count' => rand(50,200), 'comments_count' => rand(5,50)],
+            ['id' => 'user_222_' . $unique_suffix, 'media_type' => 'VIDEO', 'media_url' => 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', 'thumbnail_url' => 'https://source.unsplash.com/random/400x300?abstract,'.$user_id, 'caption' => "User {$user_id} video post", 'permalink' => '#userpost2_'.$user_id, 'timestamp' => date('Y-m-d\TH:i:sP', time() - rand(0, 86400*10)), 'username' => 'user_'.$user_id, 'likes_count' => rand(50,300), 'comments_count' => rand(10,80)],
+        ];
+    } elseif ($source_type === 'hashtag' && $hashtag) {
+        $parent_node_props['_api_debug_messages'][] = "Simulating API for Hashtag: {$hashtag}.";
+        return [
+            ['id' => 'hash_777_' . $unique_suffix, 'media_type' => 'IMAGE', 'media_url' => 'https://source.unsplash.com/random/800x600?'.$hashtag.',1', 'thumbnail_url' => 'https://source.unsplash.com/random/400x300?'.$hashtag.',1', 'caption' => "Post with #{$hashtag} and #awesome", 'permalink' => '#hashtagpost1_'.$hashtag, 'timestamp' => date('Y-m-d\TH:i:sP', time() - rand(0, 86400*2)), 'username' => 'hashtagfan_'.$hashtag, 'likes_count' => rand(20,150), 'comments_count' => rand(2,30)],
+            // Potentially overlapping ID if same hashtag is added twice, or if a user post also has the hashtag
+            ['id' => 'user_111_' . $unique_suffix, 'media_type' => 'IMAGE', 'media_url' => 'https://source.unsplash.com/random/800x600?nature,'.$hashtag, 'thumbnail_url' => 'https://source.unsplash.com/random/400x300?nature,'.$hashtag, 'caption' => "A shared-ID post for #{$hashtag}", 'permalink' => '#userpost1_'.$hashtag, 'timestamp' => date('Y-m-d\TH:i:sP', time() - rand(0, 86400*3)), 'username' => 'sharer_'.$hashtag, 'likes_count' => rand(100,250), 'comments_count' => rand(15,60)],
+        ];
+    }
+    return [];
 }
 
 
 return [
-    // Define transforms for the element node
     'transforms' => [
-        // The function is executed before the template is rendered
         'render' => function ($node, array $params) {
-            // $node->props contains element settings
-            // We need to populate $node->children with Instagram post data
+            $account_configs = $node->props['instagram_accounts'] ?? [];
+            $global_limit = $node->props['instagram_limit'] ?? 9;
+            $cache_duration_minutes = $node->props['cache_duration'] ?? 60;
+            $node->props['_api_debug_messages'] = []; // Initialize array for debug messages
 
-            $access_token = $node->props['instagram_access_token'] ?? null;
-            $source_type = $node->props['instagram_source_type'] ?? 'user';
-            $user_id = $node->props['instagram_user_id'] ?? null;
-            $hashtag = $node->props['instagram_hashtag'] ?? null;
-            $limit = $node->props['instagram_limit'] ?? 9;
-
-            // If no access token, nothing to fetch.
-            if (empty($access_token)) {
-                // $node->props['_api_error_message'] = 'Instagram Access Token is missing.';
-                return false; // Collapsing layout: don't render if no token
+            if (empty($account_configs)) {
+                $node->props['_api_error_message'] = 'No Instagram accounts configured.';
+                return false;
             }
 
-            // ** START OF SIMULATED API CALL AND DATA PROCESSING **
-            // In a real scenario, you would make an HTTP request to the Instagram API here.
-            // Example using WordPress HTTP API (wp_remote_get) or Joomla HTTP Client.
+            $cache_key_parts_for_accounts = [];
+            foreach ($account_configs as $config_item_node) {
+                if (empty($config_item_node->props) || ($config_item_node->props['status'] ?? 'published') !== 'published') {
+                    continue; // Skip disabled account configurations
+                }
+                $config_props = $config_item_node->props;
+                $acc_source_type = $config_props['account_source_type'] ?? 'user';
+                $acc_user_id = $config_props['account_user_id'] ?? null;
+                $acc_hashtag = $config_props['account_hashtag'] ?? null;
+                $acc_token_present = !empty($config_props['account_access_token']); // Don't include actual token in key
+                $cache_key_parts_for_accounts[] = $acc_source_type . '_' . ($acc_source_type === 'user' ? $acc_user_id : $acc_hashtag) . '_' . ($acc_token_present ? 'tokenyes' : 'notoken');
+            }
+            sort($cache_key_parts_for_accounts);
+            $accounts_hash = md5(implode('|', $cache_key_parts_for_accounts));
 
-            $api_url = '';
-            $query_params = [
-                'access_token' => $access_token,
-                'limit' => $limit,
+            $transient_key_parts = [
+                'instagram_feed_multi',
+                $accounts_hash,
+                $global_limit
             ];
+            $transient_key = 'ytp_if_' . md5(implode('_', array_filter($transient_key_parts)));
 
-            // This is a simplified simulation. Real API endpoints and parameters differ.
-            if ($source_type === 'user' && $user_id) {
-                // Example for user posts (Graph API - user_media edge)
-                // $api_url = "https://graph.instagram.com/{$user_id}/media";
-                // $query_params['fields'] = 'id,media_type,media_url,thumbnail_url,caption,permalink,timestamp,username,children{media_url,media_type}'; // children for carousel
-                $node->props['_api_debug_message'] = "Simulating API call for User ID: {$user_id}.";
+            $posts_data = null;
+            $loaded_from_cache = false;
 
-            } elseif ($source_type === 'hashtag' && $hashtag) {
-                // Example for hashtag posts (Graph API - ig_hashtag_search then recent_media edge)
-                // This is more complex: first get hashtag ID, then get media.
-                // $api_url = "https://graph.instagram.com/ig_hashtag_search?user_id={$user_id}&q={$hashtag}";
-                // Then another call for media using the hashtag ID.
-                // For simplicity, we'll just use a flag for simulation.
-                $node->props['_api_debug_message'] = "Simulating API call for Hashtag: {$hashtag}.";
-            } else {
-                // $node->props['_api_error_message'] = 'Invalid source type or missing User ID/Hashtag.';
-                return false; // Don't render if configuration is incomplete
+            if ($cache_duration_minutes > 0) {
+                if (function_exists('get_transient')) {
+                    $cached_data = get_transient($transient_key);
+                    if (false !== $cached_data) {
+                        $posts_data = $cached_data;
+                        $node->props['_api_debug_messages'][] = 'Loaded combined feed from WordPress cache.';
+                        $loaded_from_cache = true;
+                    }
+                }
+                // Joomla cache loading placeholder
             }
 
-            // --- SIMULATED API RESPONSE ---
-            $simulated_api_response_data = [];
-            if ($source_type === 'user') {
-                $simulated_api_response_data = [
-                    ['id' => '111', 'media_type' => 'IMAGE', 'media_url' => 'https://source.unsplash.com/random/800x600?nature,1', 'thumbnail_url' => 'https://source.unsplash.com/random/400x300?nature,1', 'caption' => 'Beautiful nature scene #sunset #mountains', 'permalink' => '#userpost1', 'timestamp' => '2023-10-26T10:00:00+0000', 'username' => 'naturelover', 'likes_count' => 150, 'comments_count' => 20],
-                    ['id' => '222', 'media_type' => 'VIDEO', 'media_url' => 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', 'thumbnail_url' => 'https://source.unsplash.com/random/400x300?abstract,1', 'caption' => 'Cool video time!', 'permalink' => '#userpost2', 'timestamp' => '2023-10-25T12:30:00+0000', 'username' => 'videofan', 'likes_count' => 200, 'comments_count' => 30],
-                    ['id' => '333', 'media_type' => 'IMAGE', 'media_url' => 'https://source.unsplash.com/random/800x600?city,1', 'thumbnail_url' => 'https://source.unsplash.com/random/400x300?city,1', 'caption' => 'City lights.', 'permalink' => '#userpost3', 'timestamp' => '2023-10-24T18:45:00+0000', 'username' => 'cityscape', 'likes_count' => 120], // Missing comments_count
-                ];
-            } elseif ($source_type === 'hashtag') {
-                 $simulated_api_response_data = [
-                    ['id' => '777', 'media_type' => 'IMAGE', 'media_url' => 'https://source.unsplash.com/random/800x600?food,1', 'thumbnail_url' => 'https://source.unsplash.com/random/400x300?food,1', 'caption' => 'Delicious #food photography', 'permalink' => '#hashtagpost1', 'timestamp' => '2023-10-26T11:00:00+0000', 'username' => 'foodie', 'likes_count' => 180, 'comments_count' => 25],
-                    ['id' => '888', 'media_type' => 'IMAGE', 'media_url' => 'https://source.unsplash.com/random/800x600?travel,1', 'thumbnail_url' => 'https://source.unsplash.com/random/400x300?travel,1', 'caption' => 'Amazing #travel destination', 'permalink' => '#hashtagpost2', 'timestamp' => '2023-10-25T14:15:00+0000', 'username' => 'wanderlust', 'comments_count' => 40], // Missing likes_count
-                ];
+            if (!$loaded_from_cache) {
+                $all_posts_data = [];
+                $active_sources_count = 0;
+
+                foreach ($account_configs as $config_item_node) {
+                    if (empty($config_item_node->props) || ($config_item_node->props['status'] ?? 'published') !== 'published') {
+                        $node->props['_api_debug_messages'][] = 'Skipping disabled source: ' . ($config_item_node->props['account_label'] ?? 'N/A');
+                        continue;
+                    }
+                    $config_props = $config_item_node->props;
+                    $account_access_token = $config_props['account_access_token'] ?? null;
+
+                    if (empty($account_access_token)) {
+                        $node->props['_api_debug_messages'][] = 'Skipping source due to missing Access Token: ' . ($config_props['account_label'] ?? 'N/A');
+                        continue;
+                    }
+                    $active_sources_count++;
+
+                    // Pass $node->props by reference to allow simulate_instagram_api_call to add debug messages
+                    $source_posts = simulate_instagram_api_call($config_props, $node->props);
+                    if (!empty($source_posts)) {
+                        $all_posts_data = array_merge($all_posts_data, $source_posts);
+                    }
+                }
+
+                if ($active_sources_count === 0 && empty($all_posts_data)) {
+                     $node->props['_api_error_message'] = 'No active Instagram sources with Access Tokens configured.';
+                     return false; // Collapse if no valid sources to fetch from
+                }
+
+                // Deduplicate posts by ID
+                $unique_posts = [];
+                if (!empty($all_posts_data)) {
+                    foreach ($all_posts_data as $post) {
+                        if (isset($post['id'])) {
+                            if (!isset($unique_posts[$post['id']])) { // Keep first encountered
+                                $unique_posts[$post['id']] = $post;
+                            }
+                        } else {
+                            $unique_posts[] = $post; // Should not happen with Instagram
+                        }
+                    }
+                    $all_posts_data = array_values($unique_posts);
+
+                    // Sort by timestamp (newest first)
+                    usort($all_posts_data, function ($a, $b) {
+                        $timestamp_a = $a['timestamp'] ?? 0;
+                        $timestamp_b = $b['timestamp'] ?? 0;
+                        return strtotime($timestamp_b) - strtotime($timestamp_a);
+                    });
+                }
+
+                // Apply global limit
+                $posts_data = array_slice($all_posts_data, 0, $global_limit);
+
+                if ($cache_duration_minutes > 0 && !empty($posts_data)) {
+                    if (function_exists('set_transient')) {
+                        set_transient($transient_key, $posts_data, $cache_duration_minutes * 60);
+                        $node->props['_api_debug_messages'][] = 'Saved combined feed to WordPress cache.';
+                    }
+                    // Joomla cache storing placeholder
+                }
             }
-            // --- END SIMULATED API RESPONSE ---
-
-
-            // $response = wp_remote_get(add_query_arg($query_params, $api_url));
-            // if (is_wp_error($response)) {
-            //     $node->props['_api_error_message'] = 'API Request Failed: ' . $response->get_error_message();
-            //     return false;
-            // }
-            // $body = wp_remote_retrieve_body($response);
-            // $data = json_decode($body, true);
-
-            // if (empty($data) || isset($data['error']) || !isset($data['data'])) {
-            //     $node->props['_api_error_message'] = 'API Error or No Data: ' . ($data['error']['message'] ?? 'Unknown error');
-            //     return false; // Don't render if API error or no data
-            // }
-            // $posts_data = $data['data'];
-            // ** END OF SIMULATED API CALL AND DATA PROCESSING **
-
-            $posts_data = array_slice($simulated_api_response_data, 0, $limit); // Use simulated data
 
             if (empty($posts_data)) {
-                // $node->props['_api_error_message'] = 'No posts found for the current settings.';
-                return false; // Collapsing layout
+                $node->props['_api_error_message'] = $node->props['_api_error_message'] ?? 'No posts found for the current settings or from cache.';
+                return false;
             }
 
-            // Clear existing children before populating (important if settings change)
             $node->children = [];
-
             foreach ($posts_data as $post) {
                 $child_node = new stdClass();
-                $child_node->type = 'instagram-post-item'; // Name of the child element
+                $child_node->type = 'instagram-post-item';
                 $child_node->props = [];
-
-                // Map API data to child element props
                 $child_node->props['post_id'] = $post['id'] ?? null;
                 $child_node->props['media_type'] = $post['media_type'] ?? 'IMAGE';
                 $child_node->props['media_url'] = $post['media_url'] ?? null;
-
-                // For CAROUSEL_ALBUM, media_url is often not present at the top level.
-                // The actual images/videos are in `children` field of the post.
-                // For simplicity, we'll use media_url if available, or the first child's media_url.
-                if ($child_node->props['media_type'] === 'CAROUSEL_ALBUM' && !empty($post['children']['data'][0]['media_url'])) {
-                     // This part is complex. Real API gives children->data[0]->media_url etc.
-                     // Our simulation is simpler.
-                    // $child_node->props['media_url'] = $post['children']['data'][0]['media_url'];
-                    // $child_node->props['thumbnail_url'] = $post['children']['data'][0]['thumbnail_url'] ?? $post['children']['data'][0]['media_url'];
-                } else {
-                    $child_node->props['thumbnail_url'] = $post['thumbnail_url'] ?? $post['media_url']; // Fallback for images
-                }
-
+                $child_node->props['thumbnail_url'] = $post['thumbnail_url'] ?? $post['media_url'];
                 $child_node->props['caption'] = $post['caption'] ?? '';
                 $child_node->props['permalink'] = $post['permalink'] ?? null;
                 $child_node->props['timestamp'] = $post['timestamp'] ?? null;
                 $child_node->props['username'] = $post['username'] ?? null;
                 $child_node->props['likes_count'] = $post['likes_count'] ?? null;
                 $child_node->props['comments_count'] = $post['comments_count'] ?? null;
-
-                // Default status for items, can be overridden by advanced item settings
                 $child_node->props['status'] = 'published';
-
-
                 $node->children[] = $child_node;
             }
 
-            // If after processing, there are no children, don't render.
             if (empty($node->children)) {
+                 $node->props['_api_error_message'] = $node->props['_api_error_message'] ?? 'No children to render after processing.';
                 return false;
             }
 
-            // Returning true (or nothing) means the element will be rendered with its template.
             return true;
         },
     ],
-
-    // Define updates for the element node (if needed for future versions)
-    // 'updates' => [
-    //     '1.0.1' => function ($node, array $params) {
-    //         // Example: if a field name changed
-    //         // if (isset($node->props['old_field_name'])) {
-    //         //     $node->props['new_field_name'] = $node->props['old_field_name'];
-    //         //     unset($node->props['old_field_name']);
-    //         // }
-    //     },
-    // ],
 ];
-
-// After creating this file, update `instagram-feed/element.json`
-// to import it by adding:
-// "@import": "./element.php",
-// at the beginning of the JSON file (before "name": ...).

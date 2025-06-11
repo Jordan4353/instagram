@@ -34,40 +34,20 @@
                 ]
             }
         },
-        "instagram_source_type": {
-            "label": "Instagram Source",
-            "description": "Select the type of Instagram feed to display.",
-            "type": "select",
-            "default": "user",
-            "options": {
-                "User Account": "user",
-                "Hashtag (Recent Media)": "hashtag"
-            }
-        },
-        "instagram_user_id": {
-            "label": "Instagram User ID",
-            "description": "Enter the numeric User ID of the Instagram account (required if 'Source: User Account' is selected). For the Instagram Graph API, this is your Instagram Business Account ID or Professional Account ID. For Basic Display API, it's your User ID. Many online tools can help find this.",
-            "type": "text",
-            "show": "instagram_source_type == 'user'"
-        },
-        "instagram_hashtag": {
-            "label": "Instagram Hashtag",
-            "description": "Enter the hashtag to fetch (without the #, e.g., 'naturephotography'). Required if 'Source: Hashtag' is selected. Note: The Instagram API (Graph API) typically provides media published in the last 24 hours for hashtags and requires specific permissions. Access to hashtag data can be limited.",
-            "type": "text",
-            "show": "instagram_source_type == 'hashtag'"
-        },
-        "instagram_access_token": {
-            "label": "Instagram Access Token",
-            "description": "Enter your Instagram API Access Token. This is required to fetch data. To obtain an Access Token, you'll need to register an app on the Facebook/Meta Developer portal and use the Instagram Basic Display API or Instagram Graph API. Ensure your token has `user_profile` and `user_media` (for Graph API) or `instagram_graph_user_profile` and `instagram_graph_user_media` (for Basic Display API) permissions. Store this token securely.",
-            "type": "textarea",
-            "attrs": {
-                "rows": 3,
-                "placeholder": "Paste your Access Token here"
+        "instagram_accounts": {
+            "label": "Instagram Sources",
+            "description": "Configure one or more Instagram accounts or hashtags to fetch posts from. Posts from all enabled sources will be combined and displayed.",
+            "type": "content-items",
+            "item": "instagram-account-config-item",
+            "placeholder": {
+                 "children": [
+                    {"type": "instagram-account-config-item", "props": { "account_label": "Default Source (configure me)" }}
+                ]
             }
         },
         "instagram_limit": {
             "label": "Number of Posts",
-            "description": "Maximum number of posts to fetch and display. The actual number may be less depending on API response and permissions. Instagram API has rate limits, so requesting large numbers frequently might lead to temporary blocking.",
+            "description": "Overall maximum number of posts to display after fetching and combining from all configured sources. The actual number may be less depending on API responses and permissions. Instagram API has rate limits.",
             "type": "number",
             "default": 9,
             "attrs": {
@@ -76,8 +56,8 @@
             }
         },
         "instagram_items": {
-            "label": "Instagram Posts",
-            "description": "Manage the individual Instagram post items. Posts will be populated here after fetching via API based on above settings.",
+            "label": "Instagram Posts (Display)",
+            "description": "Manage the individual Instagram post items. Posts will be populated here after fetching via API based on the configured sources. This section is mainly for display and reordering if needed; data is primarily driven by API.",
             "type": "content-items",
             "item": "instagram-post-item",
             "media": [
@@ -213,6 +193,16 @@
             "type": "checkbox",
             "text": "Open images/videos in a lightbox when clicked.",
             "default": true
+        },
+        "cache_duration": {
+            "label": "Cache Duration (minutes)",
+            "description": "Set how long to cache Instagram data (0 to disable). Reduces API calls and speeds up loading. Default: 60 minutes.",
+            "type": "number",
+            "default": 60,
+            "attrs": {
+                "min": 0,
+                "step": 1
+            }
         }
     },
     "fieldset": {
@@ -222,10 +212,7 @@
                 {
                     "title": "Content",
                     "fields": [
-                        "instagram_source_type",
-                        "instagram_user_id",
-                        "instagram_hashtag",
-                        "instagram_access_token",
+                        "instagram_accounts",
                         "instagram_limit",
                         "instagram_items"
                     ]
@@ -270,7 +257,8 @@
                             "fields": [
                                 "image_resolution",
                                 "video_controls",
-                                "open_in_lightbox"
+                                "open_in_lightbox",
+                                "cache_duration"
                             ]
                         }
                     ]
@@ -281,5 +269,6 @@
     },
     "defaults": {
         "name": "Instagram Feed"
+
     }
 }

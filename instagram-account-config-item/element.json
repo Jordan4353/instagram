@@ -1,0 +1,73 @@
+{
+    "name": "instagram-account-config-item",
+    "title": "Instagram Account Configuration",
+    "width": 500,
+    "element": false,
+    "fields": {
+        "account_label": {
+            "label": "Label",
+            "description": "A descriptive label for this account configuration (e.g., 'Main Business Account', 'Community Hashtag'). Helps you identify it in the list.",
+            "type": "text",
+            "default": "My Instagram Source"
+        },
+        "account_source_type": {
+            "label": "Source Type",
+            "description": "Select the type of Instagram feed for this source.",
+            "type": "select",
+            "default": "user",
+            "options": {
+                "User Account": "user",
+                "Hashtag (Recent Media)": "hashtag"
+            }
+        },
+        "account_user_id": {
+            "label": "User ID",
+            "description": "Instagram User ID for this source. Required if 'User Account' is selected.",
+            "type": "text",
+            "show": "account_source_type == 'user'"
+        },
+        "account_hashtag": {
+            "label": "Hashtag",
+            "description": "Hashtag to fetch (without #). Required if 'Hashtag' is selected.",
+            "type": "text",
+            "show": "account_source_type == 'hashtag'"
+        },
+        "account_access_token": {
+            "label": "Access Token",
+            "description": "Instagram API Access Token for this specific source. Ensure it has the correct permissions.",
+            "type": "textarea",
+            "attrs": {
+                "rows": 3,
+                "placeholder": "Paste Access Token for this source"
+            }
+        },
+        "status": "${builder.statusItem}"
+    },
+    "fieldset": {
+        "default": {
+            "type": "tabs",
+            "fields": [
+                {
+                    "title": "Configuration",
+                    "fields": [
+                        "account_label",
+                        "account_source_type",
+                        "account_user_id",
+                        "account_hashtag",
+                        "account_access_token"
+                    ]
+                },
+                {
+                    "title": "Advanced",
+                    "fields": [
+                        "status"
+                    ]
+                }
+            ]
+        }
+    },
+    "defaults": {
+        "account_label": "New Instagram Source",
+        "account_source_type": "user"
+    }
+}
